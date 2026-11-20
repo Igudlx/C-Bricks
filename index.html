@@ -462,11 +462,12 @@ const state=()=>JSON.stringify({ws,n:nm.value,b:bs.value,ns:nsE.value});
 function commit(t){const s=state();if(H[hi]===s)return;if(t&&typ&&hi==H.length-1)H[hi]=s;else{H=H.slice(0,hi+1);H.push(s);hi=H.length-1;if(H.length>300){H.shift();hi--}}typ=t?1:0}
 function ui(){$('#sv').textContent=dirty?'Save *':'Saved'}
 function save(){if(!cur)cur='s'+Date.now().toString(36);LIB[cur]={id:cur,name:sname(),t:Date.now(),data:JSON.parse(state())};try{localStorage.setItem('csb_lib',JSON.stringify(LIB));localStorage.setItem('csb_cur',cur);dirty=0}catch(e){}ui()}
+const KW=new Set('abstract as base bool break byte case catch char checked class const continue decimal default delegate do double else enum event explicit extern false finally fixed float for foreach goto if implicit in int interface internal is lock long namespace new null object operator out override params private protected public readonly ref return sbyte sealed short sizeof stackalloc static string struct switch this throw true try typeof uint ulong unchecked unsafe ushort using virtual void volatile while'.split(' '));
 function walk(a,cx,E){a.forEach((b,i)=>{const d=D[b.d],t=fill(d,b).trim();
  d.tok.forEach((k,j)=>{const v=b.v[j];
   if(v&&typeof v=='object')walk([v],cx,E);
   else{if(String(v).trim()==''&&k.d!=''&&['e','i','n','t'].includes(k.k))E.add('Empty input in "'+d.label.replace(TOK,'…')+'".');
-   if(k.k=='i'&&String(v).trim()&&!/^[A-Za-z_@][\w.]*$/.test(String(v).trim()))E.add('"'+v+'" is not a valid name.')}});
+   if(k.k=='i'&&String(v).trim()&&!/^[A-Za-z_@][\w.]*$/.test(String(v).trim()))E.add('"'+v+'" is not a valid name.');else if(k.k=='i'&&KW.has(String(v).trim()))E.add('"'+v+'" is a C# keyword and cannot be used as a name.')}});
  if(/^else\b/.test(t)&&!(i&&/^(if|else if)\b/.test(fill(D[a[i-1].d],a[i-1]).trim())))E.add('"else" must come right after an "if" block.');
  if(/^(case\b|default:)/.test(t)&&!cx.sw)E.add('"case" and "default" must be inside a switch block.');
  if(/^break;/.test(t)&&!cx.l&&!cx.sw)E.add('"break" must be inside a loop or switch.');
@@ -474,12 +475,18 @@ function walk(a,cx,E){a.forEach((b,i)=>{const d=D[b.d],t=fill(d,b).trim();
  if(/^yield\b/.test(t)&&!cx.co)E.add('"yield" only works inside a coroutine method.');
  const nx=d.k=='h'?{l:0,sw:0,co:/^IEnumerator\b/.test(t.replace(/^(public|private|protected|internal|static|\s)+/,''))}:{l:cx.l||/^(for|foreach|while|do)\b/.test(t),sw:cx.sw||/^switch\b/.test(t),co:cx.co};
  b.b.forEach(x=>walk(x,nx,E))})}
-function lint(){const E=new Set(),hs=new Set();
+function lint(){const E=new Set(),hs=new Set(),fl=new Set(),ml=new Set(),cn=sname();if(KW.has(cn))E.add('The script name "'+cn+'" is a C# keyword.');
  if(/^\d/.test(sname()))E.add('The script name cannot start with a number.');
  ws.forEach(t=>{t.s.forEach(b=>{const d=D[b.d];
   if(d.k=='s'||d.k=='c')E.add('Some blocks are not inside a method, so they are left out of the script.');
+  if(d.k=='m'||d.k=='h'){const f=fill(d,b).trim();let n=null;
+   if(d.k=='m'&&f[0]!='[')n=(/([A-Za-z_]\w*)\s*(?:=|;|\{)/.exec(f)||[])[1];
+   if(d.k=='h')n=(/([A-Za-z_]\w*)\s*\(/.exec(f.split('@@')[0])||[])[1];
+   if(n){if(n==cn)E.add('"'+n+'" has the same name as the script, and C# does not allow a member to share its class name.');
+    if(d.k=='m'){if(fl.has(n))E.add('"'+n+'" is declared more than once.');fl.add(n)}else ml.add(n)}}
   if(d.k=='h'){const h=fill(d,b).split('@@')[0].trim();if(hs.has(h))E.add('"'+h+'" is defined more than once.');hs.add(h)}});
   walk(t.s,{l:0,sw:0,co:0},E)});
+ fl.forEach(x=>{if(ml.has(x))E.add('"'+x+'" is used for both a field and a method.')});
  const c=code.textContent.replace(/"(\\.|[^"\\])*"/g,'""').replace(/\/\/.*$/gm,'');
  [['(',')'],['{','}'],['[',']']].forEach(([o,x])=>{if(c.split(o).length!=c.split(x).length)E.add('Unmatched '+o+' '+x+' in your code.')});
  const dt=$('#dot');dt.className=E.size?'bad':'';
