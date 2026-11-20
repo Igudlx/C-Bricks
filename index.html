@@ -9,10 +9,10 @@ html,body{height:100%;margin:0}
 body{font:13px/1.4 "Trebuchet MS",system-ui,sans-serif;color:var(--ink);background:var(--bg);display:grid;grid-template-rows:46px 1fr;overflow:hidden}
 header{background:var(--acc);color:#fff;display:flex;align-items:center;gap:14px;padding:0 16px}
 header h1{margin:0;font:800 20px "Trebuchet MS",sans-serif;letter-spacing:.5px}
-header span{opacity:.85}header button{margin-left:auto}
+header span{opacity:.85;margin-right:auto}
 button{font:inherit;cursor:pointer;border:0;border-radius:8px;padding:6px 12px;background:var(--acc);color:#fff;font-weight:700}
 header button{background:rgba(255,255,255,.2)}
-main{display:grid;grid-template-columns:72px 280px 1fr 430px;min-height:0}
+main{display:grid;grid-template-columns:72px var(--sw,280px) 1fr var(--rw,430px);min-height:0}
 #rail{background:var(--pan);border-right:1px solid var(--line);overflow:auto}
 #rail button{display:block;width:100%;background:none;color:var(--ink);padding:8px 2px;font-size:11px;font-weight:600;border-radius:0}
 #rail button:hover{background:var(--bg)}
@@ -22,7 +22,7 @@ main{display:grid;grid-template-columns:72px 280px 1fr 430px;min-height:0}
 #pal{overflow:auto;padding:0 12px 60px;flex:1}
 #pal h4{margin:16px 0 4px;font-size:14px}
 .pw{margin:7px 0}
-#ws{overflow:auto;position:relative;background:var(--ws)}
+#wsw{position:relative;min-height:0;min-width:0;overflow:hidden}#ws{position:absolute;inset:0;overflow:auto;background:var(--ws)}
 #cv{position:relative;width:4000px;height:3000px;background-image:radial-gradient(var(--dot) 1.2px,transparent 1.2px);background-size:24px 24px}
 #hint{position:fixed;bottom:10px;left:370px;font-size:11px;opacity:.6;pointer-events:none}
 .top{position:absolute}
@@ -40,7 +40,7 @@ main{display:grid;grid-template-columns:72px 280px 1fr 430px;min-height:0}
 .slot.has{background:rgba(255,255,255,.25);border-radius:16px;padding:1px}
 .slot input,.slot select{border:0;border-radius:12px;padding:2px 7px;font:600 12px "Trebuchet MS",sans-serif;color:#2b2540;background:#fff;min-width:28px;outline:0}
 .slot input:focus,.slot select:focus{box-shadow:0 0 0 2px #ffd500}
-.float{position:fixed;z-index:50;pointer-events:none;opacity:.93;filter:drop-shadow(0 8px 10px rgba(0,0,0,.3))}
+.float{transform-origin:0 0;position:fixed;z-index:50;pointer-events:none;opacity:.93;filter:drop-shadow(0 8px 10px rgba(0,0,0,.3))}
 #ind{position:fixed;z-index:40;pointer-events:none}
 #ind.box{border:3px solid #ffd500;border-radius:14px}
 #ind.line{background:#ffd500;border-radius:2px}
@@ -52,22 +52,34 @@ main{display:grid;grid-template-columns:72px 280px 1fr 430px;min-height:0}
 #set{padding:12px;display:grid;gap:9px;border-top:1px solid var(--line)}
 #set label{display:grid;grid-template-columns:90px 1fr;align-items:center;gap:8px;font-weight:700}
 #set input,#set select{padding:6px 9px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit}
-@media(max-width:1100px){main{grid-template-columns:64px 220px 1fr 320px}}
+
+:root{--sw:280px;--rw:430px}
+#side,#right{position:relative}#cv{transform-origin:0 0}#hint{left:calc(var(--sw) + 110px)}
+.rz{position:absolute;top:0;bottom:0;width:8px;right:-4px;cursor:col-resize;z-index:30}.rz.l{right:auto;left:-4px}.rz:hover{background:var(--acc);opacity:.45}
+#zoom{position:absolute;right:18px;bottom:16px;display:flex;align-items:center;gap:6px;background:var(--pan);border:1px solid var(--line);border-radius:12px;padding:4px 6px;box-shadow:0 2px 8px rgba(0,0,0,.18)}
+#zoom button{width:30px;padding:3px 0;font-size:18px;line-height:1}#zoom span{min-width:42px;text-align:center;font-weight:700}
+#al{display:flex;align-items:center;gap:5px;font-weight:700;margin:0 6px;cursor:pointer}#sv{min-width:74px}
+#dlg{position:fixed;inset:0;z-index:100;background:rgba(20,16,40,.55);display:grid;place-items:center}
+#dlg .card{width:min(640px,92vw);max-height:80vh;background:var(--pan);border-radius:14px;display:flex;flex-direction:column;overflow:hidden}
+#dlg .hd{display:flex;gap:8px;align-items:center;padding:12px;border-bottom:1px solid var(--line)}#dlg .hd b{font-size:15px}
+#sq{flex:1;padding:7px 12px;border:1px solid var(--line);border-radius:18px;background:var(--bg);color:var(--ink);font:inherit}
+#sl{overflow:auto;padding:8px 12px 14px}.si{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:10px}.si:hover{background:var(--bg)}.si.on{outline:2px solid var(--acc)}
+.si>div{flex:1;display:grid}.si small{opacity:.6}.si .del{background:#e5484d}
 </style></head>
 <body>
-<header><h1>C# Bricks</h1><span>Drag blocks, get a Unity script</span><button id="clr">Clear all</button></header>
+<header><h1>C# Bricks</h1><span>Drag blocks, get a Unity script</span><button id="un" title="Undo (Ctrl+Z)">↶ Undo</button><button id="re" title="Redo (Shift+Ctrl+Z)">↷ Redo</button><button id="sv" title="Save (Ctrl+S)">Saved</button><button id="op">Open</button><label id="al"><input type="checkbox" id="au" checked> Auto save</label><button id="clr">Clear all</button></header>
 <main>
 <nav id="rail"></nav>
-<section id="side"><input id="q" type="search" placeholder="Search blocks…"><div id="pal"></div></section>
-<section id="ws"><div id="cv"></div></section>
-<aside id="right">
+<section id="side"><div class="rz" id="rz1"></div><input id="q" type="search" placeholder="Search blocks…"><div id="pal"></div></section>
+<section id="wsw"><div id="ws"><div id="zw"><div id="cv"></div></div></div><div id="zoom"><button id="zo">−</button><span id="zp">100%</span><button id="zi">+</button></div></section>
+<aside id="right"><div class="rz l" id="rz2"></div>
 <div id="bar"><b id="fn">NewScript.cs</b><button id="cp">Copy</button><button id="dl">Download</button></div>
 <pre id="code"></pre>
 <div id="set"><label>Script name<input id="nm" value="NewScript" spellcheck="false"></label><label>Type<select id="bs"></select></label><label>Namespace<input id="ns" placeholder="optional" spellcheck="false"></label></div>
 </aside>
 </main>
-<div id="hint">Drag blocks in · right-click a block to delete it · drag it back to the palette to delete a stack</div>
-<div id="ind" hidden></div><div id="tip" hidden></div><datalist id="types"></datalist>
+<div id="hint">Drag blocks in · right-click or press Delete on a block to remove it · dropping outside the workspace puts a block back</div>
+<div id="dlg" hidden><div class="card"><div class="hd"><b>My scripts</b><input id="sq" placeholder="Search scripts…"><button id="nw">New</button><button id="xx">Close</button></div><div id="sl"></div></div></div><div id="ind" hidden></div><div id="tip" hidden></div><datalist id="types"></datalist>
 <script>
 const $=s=>document.querySelector(s),el=(t,c,p)=>{const e=document.createElement(t);if(c)e.className=c;if(p)p.append(e);return e};
 const TOK=/\[(\w):([^\]]*)\]/g,D={},CATS=[],MK='hmua';
@@ -76,7 +88,8 @@ TYPES.forEach(t=>{el('option','',$('#types')).value=t});
 function add(c,k,label,code,tip){const tok=[];let n=0;
  const parts=label.replace(TOK,(m,a,b)=>(tok.push({k:a,d:b}),'\u0001')).split('\u0001');
  if(code==null){code=label.replace(TOK,()=>'$'+(++n));if(k=='s'||k=='m')code+=';'}
- const id=k+label;D[id]={id,c,k,label,parts,tok,code,tip:tip||'Inserts: '+code};c.ids.push(id)}
+ const id=k+label,tg=(k=='p'?' bool boolean':'')+tok.map(t=>({b:' bool boolean',s:' string text',n:' number int float',t:' type'}[t.k]||'')).join('')+({Strings:' string text',Lists:' list array collection',Math:' number int float',Transform:' vector position rotation',Input:' input key mouse',Physics:' physics rigidbody force'}[c.n]||'');
+ D[id]={id,c,k,label,parts,tok,code,tip:tip||'Inserts: '+code,ix:(label+' '+(tip||'')+' '+c.n+tg).toLowerCase()};c.ids.push(id)}
 const cat=(n,col)=>{const c={n,col,ids:[]};CATS.push(c);
  c.A=a=>a.forEach(x=>add(c,...x));
  c.L=t=>t.trim().split('\n').forEach(l=>{let k='r';if(l[0]=='?'||l[0]=='!'){k=l[0]=='?'?'p':'s';l=l.slice(1)}const[a,b]=l.split('::');add(c,k,a.trim(),null,b)});
@@ -162,6 +175,7 @@ V.L(`![t:var] [i:x] = [e:0]::Creates a local variable inside a method.
 this::The current script instance.
 base::The parent class.`);
 
+[['bool','[b:false]'],['string','[s:text]'],['int','[n:0]'],['float','[n:0]'],['Vector3','[e:Vector3.zero]'],['GameObject','[e:null]']].forEach(([t,v])=>['public','private',''].forEach(a=>add(V,a?'m':'s',(a?a+' ':'')+t+' [i:my'+t[0].toUpperCase()+t.slice(1)+'] = '+v,null,(a||'Local')+' '+t+' variable with a starting value.')));
 const C=cat('Control','#f59e0b');
 C.A([
 ['c','if [b:true]','if ($1)','Runs the blocks inside only when the condition is true.'],
@@ -441,8 +455,12 @@ function build(){const n=sname(),bi=BASES[bs.value],ns=nsE.value.trim(),L=ns?1:0
  AUTO.forEach(([r,u])=>{if(r.test(body))us.add(u)});
  const u=[...us].sort((a,b)=>(b.startsWith('System')-a.startsWith('System'))||a.localeCompare(b));
  return u.map(x=>'using '+x+';').join('\n')+'\n\n'+(ns?'namespace '+ns+'\n{\n'+body+'}\n':body)}
-function gen(){try{localStorage.setItem('csb',JSON.stringify({ws,n:nm.value,b:bs.value,ns:nsE.value}))}catch(e){}
- code.textContent=build();$('#fn').textContent=sname()+'.cs'}
+let H=[],hi=-1,typ=0,dirty=0,cur=null,LIB={},ready=0;
+const state=()=>JSON.stringify({ws,n:nm.value,b:bs.value,ns:nsE.value});
+function commit(t){const s=state();if(H[hi]===s)return;if(t&&typ&&hi==H.length-1)H[hi]=s;else{H=H.slice(0,hi+1);H.push(s);hi=H.length-1;if(H.length>300){H.shift();hi--}}typ=t?1:0}
+function ui(){$('#sv').textContent=dirty?'Save *':'Saved'}
+function save(){if(!cur)cur='s'+Date.now().toString(36);LIB[cur]={id:cur,name:sname(),t:Date.now(),data:JSON.parse(state())};try{localStorage.setItem('csb_lib',JSON.stringify(LIB));localStorage.setItem('csb_cur',cur);dirty=0}catch(e){}ui()}
+function gen(nc,t){if(dr)return;code.textContent=build();$('#fn').textContent=sname()+'.cs';if(!nc)commit(t);if(!ready)return;dirty=1;if($('#au').checked)save();else ui()}
 
 function rBlock(b){const d=D[b.d],e=el('div','b k'+d.k);e.style.setProperty('--c',d.c.col);e._b=b;
  const row=el('div','row',e);
@@ -456,13 +474,14 @@ function rSlot(b,i){const t=D[b.d].tok[i],v=b.v[i],w=el('span','slot');w._s={b,i
  let x;
  if(t.k=='b'||t.k=='d'){x=el('select');(t.k=='b'?['true','false']:t.d.split(',')).forEach(o=>{el('option','',x).textContent=o});x.value=v}
  else{x=el('input');x.value=v;x.size=Math.max(2,v.length+1);x.spellcheck=false;x.placeholder=t.k=='n'?'0':'…';if(t.k=='t')x.setAttribute('list','types')}
- x.oninput=x.onchange=()=>{b.v[i]=x.value;if(x.tagName=='INPUT')x.size=Math.max(2,x.value.length+1);gen()};
+ x.oninput=x.onchange=()=>{b.v[i]=x.value;if(x.tagName=='INPUT')x.size=Math.max(2,x.value.length+1);gen(0,1)};
  w.append(x);return w}
 function rStack(a,top){const s=el('div','stack');s._a=a;s._top=top;a.forEach(b=>s.append(rBlock(b)));return s}
-function render(){cv.innerHTML='';ws.forEach(t=>{const d=el('div','top',cv);d.style.left=t.x+'px';d.style.top=t.y+'px';d.append(rStack(t.s,true))});gen()}
+function render(nc){cv.innerHTML='';ws.forEach(t=>{const d=el('div','top',cv);d.style.left=t.x+'px';d.style.top=t.y+'px';d.append(rStack(t.s,true))});gen(nc)}
 
-function pal(f){const p=$('#pal');p.innerHTML='';
- CATS.forEach(c=>{const ids=c.ids.filter(id=>{const d=D[id];return!f||(d.label+' '+d.tip).toLowerCase().includes(f)});if(!ids.length)return;
+const sc=(id,w)=>w.every(x=>D[id].label.toLowerCase().includes(x))?0:1;
+function pal(f){const p=$('#pal');p.innerHTML='';const qs=f.split(/\s+/).filter(Boolean).map(w=>w.length>3?w.replace(/s$/,''):w);
+ CATS.forEach(c=>{const ids=c.ids.filter(id=>qs.every(w=>D[id].ix.includes(w))).sort((a,b)=>sc(a,qs)-sc(b,qs));if(!ids.length)return;
   const h=el('h4','',p);h.textContent=c.n;h.id='c_'+c.n.replace(/\W/g,'');h.style.color=c.col;
   ids.forEach(id=>el('div','pw',p).append(rBlock(mkB(id))))})}
 CATS.forEach(c=>{const b=el('button','',$('#rail'));const i=el('i','',b);i.style.background=c.col;b.append(c.n);
@@ -473,14 +492,15 @@ let dr=null;const ind$=$('#ind'),tp=$('#tip');let tt;
 document.addEventListener('pointerdown',e=>{
  if(e.button||e.target.closest('input,select,button'))return;
  const be=e.target.closest('.b');if(!be)return;e.preventDefault();hideTip();
- const r=be.getBoundingClientRect(),b=be._b;let items;
- if(be.closest('#pal'))items=[JSON.parse(JSON.stringify(b))];
- else if(be.parentElement._s){const{b:o,i}=be.parentElement._s;o.v[i]=dv(D[o.d],i);items=[b]}
- else{const a=be.parentElement._a;items=a.splice(a.indexOf(b));ws=ws.filter(t=>t.s.length)}
- render();
- const f=el('div','float',document.body);f.append(rStack(items,false));
- dr={items,f,ox:e.clientX-r.left,oy:e.clientY-r.top,t:null};
- f.style.left=r.left+'px';f.style.top=r.top+'px'});
+ const r=be.getBoundingClientRect(),b=be._b,pl=!!be.closest('#pal');let items,org=null;
+ if(pl)items=[JSON.parse(JSON.stringify(b))];
+ else if(be.parentElement._s){const{b:o,i}=be.parentElement._s;org={o,i,b};items=[b]}
+ else{const a=be.parentElement._a,i=a.indexOf(b);org={a,i};items=a.splice(i)}
+ const f=el('div','float',document.body);f.append(rStack(items,false));f.style.transform='scale('+Z+')';
+ dr={items,f,org,ox:(e.clientX-r.left)*(pl?Z:1),oy:(e.clientY-r.top)*(pl?Z:1),t:null};
+ f.style.left=r.left+'px';f.style.top=r.top+'px';
+ if(org&&org.o)org.o.v[org.i]=dv(D[org.o.d],org.i);
+ render(1)});
 function target(e,x,y){const k=D[dr.items[0].d].k;let best=null,bd=1e9;
  if(k=='r'||k=='p'){document.querySelectorAll('#cv .slot').forEach(s=>{const r=s.getBoundingClientRect();
   if(e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom&&r.width*r.height<bd){bd=r.width*r.height;best={slot:s._s,r}}});return best}
@@ -496,12 +516,13 @@ function showInd(t){if(!t){ind$.hidden=true;return}ind$.hidden=false;
  else{Object.assign(ind$.style,{left:t.px+'px',top:t.py-2+'px',width:Math.max(t.w,70)+'px',height:'4px'});ind$.className='line'}}
 document.addEventListener('pointermove',e=>{if(!dr)return;const x=e.clientX-dr.ox,y=e.clientY-dr.oy;
  dr.f.style.left=x+'px';dr.f.style.top=y+'px';dr.t=target(e,x,y);showInd(dr.t)});
-document.addEventListener('pointerup',e=>{if(!dr)return;const{t,items,f,ox,oy}=dr;dr=null;f.remove();ind$.hidden=true;
- const w=$('#ws').getBoundingClientRect(),inside=e.clientX>w.left&&e.clientX<w.right&&e.clientY>w.top&&e.clientY<w.bottom;
- if(inside){if(t&&t.slot)t.slot.b.v[t.slot.i]=items[0];
+document.addEventListener('pointerup',e=>{if(!dr)return;const{t,items,f,ox,oy,org}=dr;dr=null;f.remove();ind$.hidden=true;
+ const w=$('#ws').getBoundingClientRect(),c=cv.getBoundingClientRect(),inside=e.clientX>w.left&&e.clientX<w.right&&e.clientY>w.top&&e.clientY<w.bottom;
+ if(inside){if(t&&t.slot){const{b:o,i}=t.slot,old=o.v[i];if(old&&typeof old=='object')ws.push({x:Math.max(0,(e.clientX-c.left)/Z+30),y:Math.max(0,(e.clientY-c.top)/Z+30),s:[old]});o.v[i]=items[0]}
   else if(t)t.a.splice(t.i,0,...items);
-  else{const c=cv.getBoundingClientRect();ws.push({x:Math.max(0,e.clientX-ox-c.left),y:Math.max(0,e.clientY-oy-c.top),s:items})}}
- render()});
+  else ws.push({x:Math.max(0,(e.clientX-ox-c.left)/Z),y:Math.max(0,(e.clientY-oy-c.top)/Z),s:items})}
+ else if(org){if(org.o)org.o.v[org.i]=org.b;else org.a.splice(org.i,0,...items)}
+ ws=ws.filter(t=>t.s.length);render()});
 cv.addEventListener('contextmenu',e=>{const be=e.target.closest('.b');if(!be)return;e.preventDefault();
  const b=be._b,p=be.parentElement;
  if(p._s){const{b:o,i}=p._s;o.v[i]=dv(D[o.d],i)}else{p._a.splice(p._a.indexOf(b),1);ws=ws.filter(t=>t.s.length)}render()});
@@ -516,10 +537,43 @@ $('#clr').onclick=()=>{if(confirm('Remove every block from this script?')){ws=[]
 $('#cp').onclick=async()=>{try{await navigator.clipboard.writeText(code.textContent)}catch(e){const r=document.createRange();r.selectNodeContents(code);getSelection().removeAllRanges();getSelection().addRange(r);document.execCommand('copy')}
  $('#cp').textContent='Copied';setTimeout(()=>$('#cp').textContent='Copy',1200)};
 $('#dl').onclick=()=>{const a=el('a');a.href=URL.createObjectURL(new Blob([code.textContent],{type:'text/plain'}));a.download=sname()+'.cs';a.click();URL.revokeObjectURL(a.href)};
-[nm,bs,nsE].forEach(x=>x.oninput=x.onchange=gen);
+[nm,bs,nsE].forEach(x=>x.oninput=x.onchange=()=>gen(0,1));
 
-try{const s=JSON.parse(localStorage.getItem('csb'));if(s&&s.ws){ws=s.ws.map(t=>(t.s=clean(t.s),t)).filter(t=>t.s.length);nm.value=s.n||'NewScript';if(BASES[s.b])bs.value=s.b;nsE.value=s.ns||''}else throw 0}
-catch(e){const st=mkB('hStart()'),lg=mkB('sDebug.Log([s:Hello])');lg.v[0]='Hello from C# Bricks!';st.b[0].push(lg);ws=[{x:50,y:40,s:[st]}]}
-pal('');render();
+let Z=1,hov=null;const zw=$('#zw'),dlg=$('#dlg');
+function rest(x){const o=JSON.parse(x);ws=o.ws;nm.value=o.n;bs.value=o.b;nsE.value=o.ns;render(1)}
+const undo=()=>{if(dr||hi<1)return;hi--;typ=0;rest(H[hi])},redo=()=>{if(dr||hi>=H.length-1)return;hi++;typ=0;rest(H[hi])};
+$('#un').onclick=undo;$('#re').onclick=redo;$('#sv').onclick=save;
+function zoom(d){Z=Math.min(2,Math.max(.4,Math.round((Z+d)*10)/10));cv.style.transform='scale('+Z+')';zw.style.width=4000*Z+'px';zw.style.height=3000*Z+'px';$('#zp').textContent=Math.round(Z*100)+'%'}
+$('#zi').onclick=()=>zoom(.1);$('#zo').onclick=()=>zoom(-.1);zoom(0);
+function rz(h,v,sg){h.onpointerdown=e=>{e.preventDefault();const x0=e.clientX,w0=parseInt(getComputedStyle(document.body).getPropertyValue(v));
+ const mv=m=>document.body.style.setProperty(v,Math.min(720,Math.max(170,w0+sg*(m.clientX-x0)))+'px');
+ const up=()=>{removeEventListener('pointermove',mv);removeEventListener('pointerup',up);try{localStorage.setItem('csb'+v,document.body.style.getPropertyValue(v))}catch(e){}};
+ addEventListener('pointermove',mv);addEventListener('pointerup',up)}}
+rz($('#rz1'),'--sw',1);rz($('#rz2'),'--rw',-1);
+['--sw','--rw'].forEach(v=>{try{const x=localStorage.getItem('csb'+v);if(x)document.body.style.setProperty(v,x)}catch(e){}});
+cv.addEventListener('mouseover',e=>{hov=e.target.closest('.b')});cv.addEventListener('mouseleave',()=>hov=null);
+document.addEventListener('keydown',e=>{const k=e.key.toLowerCase(),m=e.ctrlKey||e.metaKey;
+ if(k=='escape')dlg.hidden=true;
+ else if(m&&k=='z'){if(e.target.id=='q'||e.target.id=='sq')return;e.preventDefault();e.shiftKey?redo():undo()}
+ else if(m&&k=='y'){e.preventDefault();redo()}
+ else if(m&&k=='s'){e.preventDefault();save()}
+ else if(k=='delete'&&hov&&!dr&&!e.target.closest('input,select')){hov.dispatchEvent(new MouseEvent('contextmenu',{bubbles:true,cancelable:true}));hov=null}});
+const dis=()=>dirty&&!$('#au').checked&&!confirm('You have unsaved changes that will be lost. Continue?');
+function list(){const f=$('#sq').value.toLowerCase(),L=$('#sl');L.innerHTML='';
+ Object.values(LIB).filter(x=>x.name.toLowerCase().includes(f)).sort((a,b)=>b.t-a.t).forEach(x=>{const r=el('div','si'+(x.id==cur?' on':''),L),i=el('div','',r);i.innerHTML='<b></b><small></small>';i.firstChild.textContent=x.name+'.cs';i.lastChild.textContent=x.data.b+' · '+new Date(x.t).toLocaleString();
+  const o=el('button','',r);o.textContent='Open';o.onclick=()=>{if(dis())return;cur=x.id;load(x.data);try{localStorage.setItem('csb_cur',cur)}catch(e){}dlg.hidden=true};
+  const d=el('button','del',r);d.textContent='Delete';d.onclick=()=>{if(!confirm('Delete '+x.name+'.cs for good?'))return;delete LIB[x.id];try{localStorage.setItem('csb_lib',JSON.stringify(LIB))}catch(e){}if(cur==x.id)fresh();list()}});
+ if(!L.children.length)L.textContent='No saved scripts yet.'}
+$('#op').onclick=()=>{$('#sq').value='';list();dlg.hidden=false;$('#sq').focus()};
+$('#sq').oninput=list;$('#xx').onclick=()=>dlg.hidden=true;dlg.onpointerdown=e=>{if(e.target==dlg)dlg.hidden=true};
+$('#nw').onclick=()=>{if(dis())return;fresh();dlg.hidden=true};
+$('#au').onchange=()=>{try{localStorage.setItem('csb_au',$('#au').checked?1:0)}catch(e){}if($('#au').checked&&dirty)save();ui()};
+addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue=''}});
+function load(o){ws=o.ws.map(t=>(t.s=clean(t.s),t)).filter(t=>t.s.length);nm.value=o.n||'NewScript';bs.value=BASES[o.b]?o.b:'MonoBehaviour';nsE.value=o.ns||'';render(1);H=[state()];hi=0;typ=0;dirty=0;ui()}
+function fresh(){const st=mkB('hStart()'),lg=mkB('sDebug.Log([s:Hello])');lg.v[0]='Hello from C# Bricks!';st.b[0].push(lg);cur=null;load({ws:[{x:50,y:40,s:[st]}],n:'NewScript',b:'MonoBehaviour',ns:''})}
+try{LIB=JSON.parse(localStorage.getItem('csb_lib'))||{}}catch(e){LIB={}}
+$('#au').checked=localStorage.getItem('csb_au')!='0';cur=localStorage.getItem('csb_cur');
+if(LIB[cur])load(LIB[cur].data);else{cur=null;let o;try{o=JSON.parse(localStorage.getItem('csb'))}catch(e){}if(o&&o.ws)load(o);else fresh()}
+pal('');ready=1;
 </script>
 </body></html>
