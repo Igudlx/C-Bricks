@@ -484,7 +484,7 @@ function lint(){const E=new Set(),hs=new Set();
  [['(',')'],['{','}'],['[',']']].forEach(([o,x])=>{if(c.split(o).length!=c.split(x).length)E.add('Unmatched '+o+' '+x+' in your code.')});
  const dt=$('#dot');dt.className=E.size?'bad':'';
  dt.title='Green = no errors found. Red = errors found.\n(This is a quick check of your blocks. The Unity compiler has the final say.)'+(E.size?'\n\nProblems:\n- '+[...E].slice(0,8).join('\n- '):'')}
-function gen(nc,t){if(dr)return;code.textContent=build();lint();$('#fn').textContent=sname()+'.cs';if(!nc)commit(t);if(!ready)return;dirty=1;if($('#au').checked)save();else ui()}
+function gen(nc,t){if(dr)return;code.textContent=build();lint();$('#fn').textContent=sname()+'.cs';if(!nc)commit(t);if(!ready)return;dirty=1;if($('#au').checked)save();else ui();try{sessionStorage.setItem('csb_draft',state());sessionStorage.setItem('csb_cur',cur||'');sessionStorage.setItem('csb_dirty',dirty)}catch(e){}}
 
 function rBlock(b){const d=D[b.d],e=el('div','b k'+d.k);e.style.setProperty('--c',d.c.col);e._b=b;
  const row=el('div','row',e);
@@ -596,8 +596,8 @@ addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue='
 function load(o){ws=o.ws.map(t=>(t.s=clean(t.s),t)).filter(t=>t.s.length);nm.value=o.n||'NewScript';bs.value=BASES[o.b]?o.b:'MonoBehaviour';nsE.value=o.ns||'';render(1);H=[state()];hi=0;typ=0;dirty=0;ui()}
 function fresh(){const st=mkB('hStart()'),lg=mkB('sDebug.Log([s:Hello])');lg.v[0]='Hello from C# Bricks!';st.b[0].push(lg);cur=null;load({ws:[{x:50,y:40,s:[st]}],n:'NewScript',b:'MonoBehaviour',ns:''})}
 try{LIB=JSON.parse(localStorage.getItem('csb_lib'))||{}}catch(e){LIB={}}
-$('#au').checked=localStorage.getItem('csb_au')!='0';cur=localStorage.getItem('csb_cur');
-if(LIB[cur])load(LIB[cur].data);else{cur=null;let o;try{o=JSON.parse(localStorage.getItem('csb'))}catch(e){}if(o&&o.ws)load(o);else fresh()}
+$('#au').checked=localStorage.getItem('csb_au')!='0';let dd=null;try{dd=JSON.parse(sessionStorage.getItem('csb_draft'))}catch(e){}
+if(dd&&dd.ws){cur=sessionStorage.getItem('csb_cur')||null;if(!LIB[cur])cur=null;load(dd);dirty=+sessionStorage.getItem('csb_dirty')||0;ui()}else fresh();
 pal('');ready=1;
 </script>
 </body></html>
