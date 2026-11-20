@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>C# Bricks</title>
+<style>
+:root{--bg:#f3f1fa;--pan:#fff;--ink:#3b3558;--line:#ddd8ee;--ws:#f7f6fc;--dot:#d3cde8;--code:#1c1a2b;--codeink:#e8e4ff;--acc:#7c4dff}
+@media(prefers-color-scheme:dark){:root{--bg:#171524;--pan:#211e33;--ink:#e2defa;--line:#38334f;--ws:#1a182a;--dot:#2f2b48}}
+*{box-sizing:border-box}[hidden]{display:none!important}
+html,body{height:100%;margin:0}
+body{font:13px/1.4 "Trebuchet MS",system-ui,sans-serif;color:var(--ink);background:var(--bg);display:grid;grid-template-rows:46px 1fr;overflow:hidden}
+header{background:var(--acc);color:#fff;display:flex;align-items:center;gap:14px;padding:0 16px}
+header h1{margin:0;font:800 20px "Trebuchet MS",sans-serif;letter-spacing:.5px}
+header span{opacity:.85}header button{margin-left:auto}
+button{font:inherit;cursor:pointer;border:0;border-radius:8px;padding:6px 12px;background:var(--acc);color:#fff;font-weight:700}
+header button{background:rgba(255,255,255,.2)}
+main{display:grid;grid-template-columns:72px 280px 1fr 430px;min-height:0}
+#rail{background:var(--pan);border-right:1px solid var(--line);overflow:auto}
+#rail button{display:block;width:100%;background:none;color:var(--ink);padding:8px 2px;font-size:11px;font-weight:600;border-radius:0}
+#rail button:hover{background:var(--bg)}
+#rail i{display:block;width:26px;height:26px;border-radius:50%;margin:0 auto 3px}
+#side{display:flex;flex-direction:column;min-height:0;background:var(--pan);border-right:1px solid var(--line)}
+#q{margin:10px;padding:8px 14px;border:1px solid var(--line);border-radius:20px;background:var(--bg);color:var(--ink);font:inherit}
+#pal{overflow:auto;padding:0 12px 60px;flex:1}
+#pal h4{margin:16px 0 4px;font-size:14px}
+.pw{margin:7px 0}
+#ws{overflow:auto;position:relative;background:var(--ws)}
+#cv{position:relative;width:4000px;height:3000px;background-image:radial-gradient(var(--dot) 1.2px,transparent 1.2px);background-size:24px 24px}
+#hint{position:fixed;bottom:10px;left:370px;font-size:11px;opacity:.6;pointer-events:none}
+.top{position:absolute}
+.stack{display:flex;flex-direction:column;align-items:flex-start}
+.b{--c:#888;background:var(--c);color:#fff;font-weight:700;border:1px solid rgba(0,0,0,.22);border-radius:5px;display:inline-block;min-width:30px;cursor:grab;user-select:none;touch-action:none}
+.row{padding:6px 9px;display:flex;align-items:center;gap:5px;white-space:nowrap}
+.sub{border-top:1px solid rgba(0,0,0,.15)}
+.cb{margin-left:16px;background:rgba(0,0,0,.14)}
+.cb .stack{min-height:26px;min-width:70px;padding:2px 0}
+.foot{height:12px}
+.kh,.km,.ku,.ka{border-radius:18px 18px 5px 5px;margin-top:6px}
+.kr{border-radius:16px}.kr .row{padding:3px 9px}
+.kp{border:0;clip-path:polygon(10px 0,calc(100% - 10px) 0,100% 50%,calc(100% - 10px) 100%,10px 100%,0 50%)}.kp .row{padding:4px 14px}
+.slot{display:inline-flex;align-items:center}
+.slot.has{background:rgba(255,255,255,.25);border-radius:16px;padding:1px}
+.slot input,.slot select{border:0;border-radius:12px;padding:2px 7px;font:600 12px "Trebuchet MS",sans-serif;color:#2b2540;background:#fff;min-width:28px;outline:0}
+.slot input:focus,.slot select:focus{box-shadow:0 0 0 2px #ffd500}
+.float{position:fixed;z-index:50;pointer-events:none;opacity:.93;filter:drop-shadow(0 8px 10px rgba(0,0,0,.3))}
+#ind{position:fixed;z-index:40;pointer-events:none}
+#ind.box{border:3px solid #ffd500;border-radius:14px}
+#ind.line{background:#ffd500;border-radius:2px}
+#tip{position:fixed;z-index:60;max-width:270px;background:#25203b;color:#fff;padding:9px 12px;border-radius:9px;font-size:12px;pointer-events:none;box-shadow:0 6px 18px rgba(0,0,0,.35)}
+#right{display:flex;flex-direction:column;min-height:0;background:var(--pan);border-left:1px solid var(--line)}
+#bar{display:flex;gap:8px;padding:8px 10px;align-items:center;border-bottom:1px solid var(--line)}
+#bar b{margin-right:auto}
+#code{flex:1;margin:0;background:var(--code);color:var(--codeink);padding:14px;overflow:auto;font:12.5px/1.55 ui-monospace,Consolas,monospace;white-space:pre;tab-size:4}
+#set{padding:12px;display:grid;gap:9px;border-top:1px solid var(--line)}
+#set label{display:grid;grid-template-columns:90px 1fr;align-items:center;gap:8px;font-weight:700}
+#set input,#set select{padding:6px 9px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit}
+@media(max-width:1100px){main{grid-template-columns:64px 220px 1fr 320px}}
+</style></head>
+<body>
+<header><h1>C# Bricks</h1><span>Drag blocks, get a Unity script</span><button id="clr">Clear all</button></header>
+<main>
+<nav id="rail"></nav>
+<section id="side"><input id="q" type="search" placeholder="Search blocks…"><div id="pal"></div></section>
+<section id="ws"><div id="cv"></div></section>
+<aside id="right">
+<div id="bar"><b id="fn">NewScript.cs</b><button id="cp">Copy</button><button id="dl">Download</button></div>
+<pre id="code"></pre>
+<div id="set"><label>Script name<input id="nm" value="NewScript" spellcheck="false"></label><label>Type<select id="bs"></select></label><label>Namespace<input id="ns" placeholder="optional" spellcheck="false"></label></div>
+</aside>
+</main>
+<div id="hint">Drag blocks in · right-click a block to delete it · drag it back to the palette to delete a stack</div>
+<div id="ind" hidden></div><div id="tip" hidden></div><datalist id="types"></datalist>
+<script>
+const $=s=>document.querySelector(s),el=(t,c,p)=>{const e=document.createElement(t);if(c)e.className=c;if(p)p.append(e);return e};
+const TOK=/\[(\w):([^\]]*)\]/g,D={},CATS=[],MK='hmua';
+const TYPES='int float double bool string char long short byte uint object var void Vector2 Vector3 Vector4 Quaternion Color GameObject Transform Rigidbody Rigidbody2D Collider Collider2D Camera AudioSource AudioClip Animator Renderer Material Sprite Texture2D Canvas Image Button TMP_Text Light Mesh CharacterController NavMeshAgent Component MonoBehaviour ScriptableObject Action Func<int> IEnumerator List<int> List<string> List<GameObject> Dictionary<string,int> int[] float[] string[] GameObject[]'.split(' ');
+TYPES.forEach(t=>{el('option','',$('#types')).value=t});
+function add(c,k,label,code,tip){const tok=[];let n=0;
+ const parts=label.replace(TOK,(m,a,b)=>(tok.push({k:a,d:b}),'\u0001')).split('\u0001');
+ if(code==null){code=label.replace(TOK,()=>'$'+(++n));if(k=='s'||k=='m')code+=';'}
+ const id=k+label;D[id]={id,c,k,label,parts,tok,code,tip:tip||'Inserts: '+code};c.ids.push(id)}
+const cat=(n,col)=>{const c={n,col,ids:[]};CATS.push(c);
+ c.A=a=>a.forEach(x=>add(c,...x));
+ c.L=t=>t.trim().split('\n').forEach(l=>{let k='r';if(l[0]=='?'||l[0]=='!'){k=l[0]=='?'?'p':'s';l=l.slice(1)}const[a,b]=l.split('::');add(c,k,a.trim(),null,b)});
+ c.E=t=>t.trim().split('\n').forEach(l=>{const[a,b]=l.split('::');add(c,'h',a.trim(),'void '+a.trim(),b)});
+ c.F=(pre,spec)=>spec.split(';').forEach(s=>{const[n,a,t,k]=s.split(':');add(c,k||'r',pre+'.'+n+'('+[...Array(+a)].map(()=>'[n:0]').join(', ')+')',null,t)});
+ return c};
+
+const S=cat('Script','#9966ff');
+S.A([
+['u','using [i:UnityEngine.UI]','using $1;','Imports a namespace at the top of the file. Common ones are added automatically.'],
+['a','RequireComponent [t:Rigidbody]','[RequireComponent(typeof($1))]','Unity adds this component automatically when the script is attached.'],
+['a','DisallowMultipleComponent','[DisallowMultipleComponent]','Only one copy of this script can be on a GameObject.'],
+['a','ExecuteAlways','[ExecuteAlways]','Runs the script in edit mode as well as play mode.'],
+['a','AddComponentMenu [s:Custom/MyScript]','[AddComponentMenu($1)]','Places the script in the Add Component menu.'],
+['a','CreateAssetMenu file [s:NewAsset] menu [s:My/Asset]','[CreateAssetMenu(fileName = $1, menuName = $2)]','Lets you create this ScriptableObject from the Assets menu.'],
+['m','enum [i:State] { [e:Idle, Walk, Run] }','public enum $1 { $2 }','Declares an enum inside the class.'],
+['h','[d:public,private,protected,internal,public static,private static] [t:void] [i:MyMethod]([e:])','$1 $2 $3($4)','Defines a method. Put the blocks it runs inside.'],
+['h','coroutine [i:MyRoutine]([e:])','IEnumerator $1($2)','A coroutine method that can wait with yield blocks. Start it with StartCoroutine.'],
+['h','async Task [i:DoWork]([e:])','async Task $1($2)','An async method. Add using System.Threading.Tasks is automatic.'],
+['s','// [e:comment]','// $1','A comment line that is ignored by C#.']]);
+
+const E=cat('Events','#e6b800');
+E.E(`Awake()::Runs once when the script loads, before Start.
+Start()::Runs once before the first frame.
+Update()::Runs every frame.
+FixedUpdate()::Runs on a fixed timestep, best for physics.
+LateUpdate()::Runs every frame after all Update calls, good for cameras.
+OnEnable()::Runs when the object or script becomes enabled.
+OnDisable()::Runs when the object or script becomes disabled.
+OnDestroy()::Runs when the object is destroyed.
+OnGUI()::Draws immediate-mode GUI each event.
+OnValidate()::Runs in the editor when a value changes in the Inspector.
+Reset()::Runs in the editor when the script is first added or reset.
+OnApplicationQuit()::Runs when the app is closing.
+OnApplicationPause(bool pause)::Runs when the app pauses or resumes.
+OnApplicationFocus(bool focus)::Runs when the app gains or loses focus.
+OnCollisionEnter(Collision collision)::Runs when this collider starts touching another.
+OnCollisionStay(Collision collision)::Runs every physics step while touching.
+OnCollisionExit(Collision collision)::Runs when a collision ends.
+OnTriggerEnter(Collider other)::Runs when something enters this trigger.
+OnTriggerStay(Collider other)::Runs every physics step while something is in the trigger.
+OnTriggerExit(Collider other)::Runs when something leaves the trigger.
+OnCollisionEnter2D(Collision2D collision)::2D version of OnCollisionEnter.
+OnCollisionExit2D(Collision2D collision)::2D version of OnCollisionExit.
+OnTriggerEnter2D(Collider2D other)::2D version of OnTriggerEnter.
+OnTriggerExit2D(Collider2D other)::2D version of OnTriggerExit.
+OnMouseDown()::Runs when the mouse is pressed on this collider.
+OnMouseUp()::Runs when the mouse is released.
+OnMouseEnter()::Runs when the mouse moves onto this collider.
+OnMouseExit()::Runs when the mouse leaves this collider.
+OnBecameVisible()::Runs when a renderer becomes visible to a camera.
+OnBecameInvisible()::Runs when no camera sees the renderer anymore.
+OnDrawGizmos()::Draw debug shapes in the Scene view.
+OnDrawGizmosSelected()::Draw debug shapes only when selected.
+OnParticleCollision(GameObject other)::Runs when a particle hits this object.
+OnControllerColliderHit(ControllerColliderHit hit)::Runs when a CharacterController hits something.`);
+
+const V=cat('Variables','#ff8c1a');
+V.A([
+['m','public [t:int] [i:myVar] = [e:0]',null,'Public field. Shows in the Inspector and other scripts can use it.'],
+['m','private [t:int] [i:myVar] = [e:0]',null,'Private field only this script can use.'],
+['m','[SerializeField] private [t:GameObject] [i:myObj]','[SerializeField] private $1 $2;','Private field that still shows in the Inspector.'],
+['m','public static [t:int] [i:count] = [e:0]',null,'Static field shared by every copy of the script.'],
+['m','const [t:int] [i:MAX] = [e:10]','private const $1 $2 = $3;','A constant that can never change.'],
+['m','readonly [t:int] [i:id] = [e:1]','private readonly $1 $2 = $3;','A field that can only be set once.'],
+['m','public [t:int] [i:Score] { get; private set; }','public $1 $2 { get; private set; }','Property with a public getter and private setter.'],
+['m','event [t:Action] [i:OnDone]','public event $1 $2;','An event other scripts can subscribe to.'],
+['m','[Header([s:Settings])]','[Header($1)]','Draws a bold title above the next field in the Inspector.'],
+['m','[Range([n:0], [n:10])]','[Range($1, $2)]','Shows the next field as a slider.'],
+['m','[SerializeField]','[SerializeField]','Attribute for the next field to show it in the Inspector.'],
+['m','[HideInInspector]','[HideInInspector]','Hides the next public field in the Inspector.'],
+['m','[Space]','[Space]','Adds a gap before the next field in the Inspector.'],
+['m','[Serializable]','[Serializable]','Marks the next type so Unity can save it.']]);
+V.L(`![t:var] [i:x] = [e:0]::Creates a local variable inside a method.
+![i:x] = [e:0]::Sets a variable to a new value.
+![i:x] += [e:1]::Adds to a variable.
+![i:x] -= [e:1]::Subtracts from a variable.
+![i:x]++::Adds 1 to a variable.
+![i:x]--::Subtracts 1 from a variable.
+![i:x] [d:*=,/=,%=,??=,&=,|=,^=] [e:2]::Other compound assignments.
+[i:myVar]::Reads a variable. Type its name.
+[e:obj].[i:field]::Reads a field or property of an object.
+this::The current script instance.
+base::The parent class.`);
+
+const C=cat('Control','#f59e0b');
+C.A([
+['c','if [b:true]','if ($1)','Runs the blocks inside only when the condition is true.'],
+['c','if [b:true] else','if ($1)@@else','Runs the first group when true, the second group when false.'],
+['c','else if [b:true]','else if ($1)','Place right under an if. Runs when its own condition is true.'],
+['c','else','else','Place right under an if. Runs when nothing above matched.'],
+['c','for [t:int] [i:i] from [n:0] while less than [n:10]','for ($1 $2 = $3; $2 < $4; $2++)','Counts up and repeats the blocks each time.'],
+['c','foreach [t:var] [i:item] in [e:list]','foreach ($1 $2 in $3)','Repeats once for every item in a list or array.'],
+['c','while [b:true]','while ($1)','Repeats while the condition stays true.'],
+['c','switch [e:value]','switch ($1)','Picks a case based on a value. Put case blocks inside.'],
+['c','case [e:1]','case $1:','One branch of a switch. End it with a break block.'],
+['c','default','default:','The branch of a switch used when no case matches.'],
+['c','try, catch [i:ex]','try@@catch (Exception $1)','Runs code and catches errors in the second group.'],
+['c','try, catch, finally','try@@catch (Exception ex)@@finally','Try, catch errors, and always run the finally group.'],
+['c','using ([e:var x = new Foo()])','using ($1)','Disposes the object when the group ends.'],
+['c','lock ([e:this])','lock ($1)','Makes sure only one thread runs the group at a time.']]);
+C.L(`!return::Exits the method.
+!return [e:0]::Exits the method and gives back a value.
+!break::Leaves the current loop or switch case.
+!continue::Skips to the next loop round.
+!yield return null::In a coroutine, waits one frame.
+!yield return new WaitForSeconds([n:1])::In a coroutine, waits some seconds.
+!yield return new WaitForEndOfFrame()::In a coroutine, waits until the frame has been drawn.
+!yield return new WaitForFixedUpdate()::In a coroutine, waits for the next physics step.
+!yield return new WaitUntil(() => [e:ready])::In a coroutine, waits until the condition is true.
+!yield break::Ends a coroutine early.
+!StartCoroutine([e:MyRoutine()])::Starts a coroutine.
+!StopAllCoroutines()::Stops every coroutine on this script.
+!Invoke([s:MyMethod], [n:1])::Calls a method by name after a delay in seconds.
+!InvokeRepeating([s:MyMethod], [n:1], [n:1])::Calls a method by name repeatedly.
+!CancelInvoke()::Cancels all Invoke calls on this script.
+!throw new Exception([s:Error])::Raises an error.
+![i:MyMethod]([e:])::Calls a method you made. Type its name and arguments.`);
+
+const O=cat('Operators','#40bf4a');
+[['==','p'],['!=','p'],['<','p'],['>','p'],['<=','p'],['>=','p'],['&&','p'],['||','p'],['+','r'],['-','r'],['*','r'],['/','r'],['%','r'],['&','r'],['|','r'],['^','r'],['<<','r'],['>>','r'],['??','r']]
+.forEach(([o,k])=>add(O,k,`[e:a] ${o} [e:b]`,`($1 ${o} $2)`,`Combines two values with ${o}.`));
+O.A([
+['p','not [e:x]','(!$1)','Flips true to false and false to true.'],
+['p','[b:true]','$1','A true or false value.'],
+['r','[n:0]','$1','A number.'],
+['r','[s:text]','$1','A piece of text.'],
+['r','null','null','No object.'],
+['r','[e:cond] ? [e:a] : [e:b]','($1 ? $2 : $3)','Gives a when the condition is true, otherwise b.'],
+['r','([t:float]) [e:x]','(($1)$2)','Converts a value to another type.'],
+['p','[e:x] is [t:GameObject]','($1 is $2)','True if x is that type.'],
+['r','[e:x] as [t:GameObject]','($1 as $2)','Converts x to that type, or null if it is not one.'],
+['r','typeof([t:GameObject])','typeof($1)','The Type object of a type.'],
+['r','default([t:int])','default($1)','The default value of a type.'],
+['r','nameof([e:x])','nameof($1)','The name of a variable or member as text.'],
+['r','$"[e:Hi {name}]"','$"$1"','Text with variables inside {braces}.'],
+['r','new [t:Vector3]([e:])','new $1($2)','Creates a new object of a type.'],
+['r','() => [e:x]','() => $1','A lambda with no parameters.'],
+['r','([i:a]) => [e:a * 2]','($1) => $2','A lambda with a parameter.']]);
+
+const M=cat('Math','#0fbd8c');
+M.F('Mathf','Abs:1:Absolute value.;Sqrt:1:Square root.;Pow:2:First number raised to the second.;Min:2:The smaller value.;Max:2:The larger value.;Clamp:3:Limits a value between a min and max.;Clamp01:1:Limits a value between 0 and 1.;Lerp:3:Blends from a to b by t (0 to 1).;InverseLerp:3:Where a value sits between a and b (0 to 1).;MoveTowards:3:Steps a value toward a target by a max amount.;Round:1:Rounds to the nearest whole number.;Floor:1:Rounds down.;Ceil:1:Rounds up.;FloorToInt:1:Rounds down to an int.;RoundToInt:1:Rounds to an int.;CeilToInt:1:Rounds up to an int.;Sin:1:Sine (radians).;Cos:1:Cosine (radians).;Tan:1:Tangent (radians).;Atan2:2:Angle in radians from y and x.;Sign:1:-1 or 1 depending on sign.;PingPong:2:Bounces a value back and forth.;Repeat:2:Wraps a value around a length.;Approximately:2:True if two floats are nearly equal.:p');
+M.F('Random','Range:2:Random number from min up to max.');
+M.L(`Mathf.PI::Pi.
+Mathf.Infinity::Positive infinity.
+Mathf.Deg2Rad::Multiply degrees by this to get radians.
+Mathf.Rad2Deg::Multiply radians by this to get degrees.
+Random.value::Random float from 0 to 1.
+Random.insideUnitSphere::Random point inside a sphere of radius 1.
+Random.insideUnitCircle::Random point inside a circle of radius 1.
+Random.rotation::A random rotation.
+Vector3.Distance([e:a], [e:b])::Distance between two points.
+Vector3.Dot([e:a], [e:b])::Dot product.
+Vector3.Cross([e:a], [e:b])::Cross product.`);
+
+const T=cat('Strings','#e84c8a');
+T.L(`[e:text].Length::Number of characters.
+[e:text].ToUpper()::Uppercase copy.
+[e:text].ToLower()::Lowercase copy.
+[e:text].Trim()::Removes spaces at both ends.
+?[e:text].Contains([s:a])::True if the text contains the string.
+?[e:text].StartsWith([s:a])::True if the text starts with the string.
+?[e:text].EndsWith([s:a])::True if the text ends with the string.
+?string.IsNullOrEmpty([e:text])::True if the text is null or empty.
+[e:text].Replace([s:a], [s:b])::Replaces every a with b.
+[e:text].Substring([n:0], [n:3])::Part of the text from a start index and length.
+[e:text].Split([e:',']) ::Splits text into an array.
+[e:text].IndexOf([s:a])::Position of the string, or -1.
+string.Format([s:{0}], [e:x])::Fills {0} placeholders.
+string.Join([s:, ], [e:list])::Joins items with a separator.
+[e:x].ToString()::Converts a value to text.
+int.Parse([e:text])::Converts text to an int.
+float.Parse([e:text])::Converts text to a float.`);
+
+const LS=cat('Lists','#fc6a47');
+LS.L(`new List<[t:int]>()::Creates an empty list.
+![e:list].Add([e:x])::Adds an item to the end.
+![e:list].Remove([e:x])::Removes the first matching item.
+![e:list].RemoveAt([n:0])::Removes the item at an index.
+![e:list].Insert([n:0], [e:x])::Inserts an item at an index.
+![e:list].Clear()::Removes everything.
+![e:list].Sort()::Sorts the list.
+![e:list].Reverse()::Reverses the order.
+[e:list].Count::Number of items in a list.
+[e:array].Length::Number of items in an array.
+?[e:list].Contains([e:x])::True if the list has the item.
+[e:list].IndexOf([e:x])::Index of an item, or -1.
+[e:list][[e:0]]::The item at an index (or dictionary key).
+new [t:int][[e:5]]::Creates an array with a fixed size.
+new Dictionary<[t:string], [t:int]>()::Creates an empty dictionary.
+?[e:dict].ContainsKey([e:key])::True if the dictionary has the key.
+?[e:dict].TryGetValue([e:key], out [i:value])::Looks up a key and gives the value.
+new Queue<[t:int]>()::Creates a first-in first-out queue.
+new Stack<[t:int]>()::Creates a last-in first-out stack.
+new HashSet<[t:int]>()::Creates a set of unique items.
+![e:q].Enqueue([e:x])::Adds to a queue.
+[e:q].Dequeue()::Takes the first item from a queue.
+![e:s].Push([e:x])::Adds to a stack.
+[e:s].Pop()::Takes the top item from a stack.
+[e:list].ToArray()::Converts to an array.`);
+
+const U=cat('Unity','#4c97ff');
+U.L(`!Debug.Log([s:Hello])::Prints a message to the Unity Console.
+!Debug.LogWarning([s:Careful])::Prints a yellow warning.
+!Debug.LogError([s:Oops])::Prints a red error.
+!Debug.DrawLine([e:a], [e:b])::Draws a line in the Scene view.
+!Debug.DrawRay([e:origin], [e:direction])::Draws a ray in the Scene view.
+gameObject::The GameObject this script is on.
+transform::The Transform of this object.
+Camera.main::The camera tagged MainCamera.
+GameObject.Find([s:Name])::Finds an object by name.
+GameObject.FindWithTag([s:Player])::Finds an object by tag.
+GameObject.FindGameObjectsWithTag([s:Enemy])::Finds all objects with a tag.
+FindObjectOfType<[t:Camera]>()::Finds the first object of a type in the scene.
+Instantiate([e:prefab], [e:transform.position], [e:Quaternion.identity])::Spawns a copy of a prefab.
+!Destroy([e:gameObject], [n:0])::Destroys an object after a delay in seconds.
+!DontDestroyOnLoad([e:gameObject])::Keeps the object when loading a new scene.
+![e:obj].SetActive([b:true])::Turns an object on or off.
+?[e:obj].activeSelf::True if the object is active.
+?[e:obj].CompareTag([s:Player])::True if the object has this tag.
+GetComponent<[t:Rigidbody]>()::Gets a component on this object.
+[e:obj].GetComponent<[t:Rigidbody]>()::Gets a component on another object.
+GetComponentInChildren<[t:Rigidbody]>()::Gets a component in this object or its children.
+GetComponentInParent<[t:Rigidbody]>()::Gets a component in this object or its parents.
+?TryGetComponent<[t:Rigidbody]>(out [i:rb])::Gets a component if it exists.
+![e:obj].AddComponent<[t:Rigidbody]>()::Adds a component to an object.
+!SceneManager.LoadScene([s:SampleScene])::Loads a scene by name.
+!Application.Quit()::Closes the app.
+PlayerPrefs.GetInt([s:key], [n:0])::Reads a saved int.
+!PlayerPrefs.SetInt([s:key], [n:0])::Saves an int.
+PlayerPrefs.GetString([s:key], [s:])::Reads a saved string.
+!PlayerPrefs.SetString([s:key], [s:value])::Saves a string.
+PlayerPrefs.GetFloat([s:key], [n:0])::Reads a saved float.
+!PlayerPrefs.SetFloat([s:key], [n:0])::Saves a float.
+!PlayerPrefs.Save()::Writes saved values to disk.
+![e:source].Play()::Plays an AudioSource.
+![e:source].Stop()::Stops an AudioSource.
+![e:source].PlayOneShot([e:clip])::Plays a sound once.
+![e:animator].SetBool([s:isRunning], [b:true])::Sets an Animator bool.
+![e:animator].SetTrigger([s:Jump])::Fires an Animator trigger.
+![e:animator].SetFloat([s:Speed], [n:0])::Sets an Animator float.
+![e:animator].SetInteger([s:State], [n:0])::Sets an Animator int.
+Time.deltaTime::Seconds since the last frame.
+Time.time::Seconds since the game started.
+Time.fixedDeltaTime::Seconds between physics steps.
+Time.timeScale::Game speed. 0 pauses.
+Time.unscaledDeltaTime::Frame time ignoring timeScale.`);
+
+const X=cat('Transform','#5cb1d6');
+X.L(`transform.position::World position.
+transform.localPosition::Position relative to the parent.
+transform.rotation::World rotation.
+transform.eulerAngles::Rotation in degrees.
+transform.localScale::Scale.
+transform.forward::Forward direction.
+transform.right::Right direction.
+transform.up::Up direction.
+transform.parent::The parent Transform.
+transform.childCount::Number of children.
+transform.GetChild([n:0])::The child at an index.
+!transform.Translate([e:Vector3.forward * Time.deltaTime])::Moves the object.
+!transform.Rotate([n:0], [n:90], [n:0])::Rotates the object by degrees.
+!transform.LookAt([e:target])::Turns to face a target.
+!transform.SetParent([e:parent])::Changes the parent.
+new Vector3([n:0], [n:0], [n:0])::A 3D vector.
+new Vector2([n:0], [n:0])::A 2D vector.
+Vector3.zero::(0, 0, 0)
+Vector3.one::(1, 1, 1)
+Vector3.up::(0, 1, 0)
+Vector3.forward::(0, 0, 1)
+Vector3.right::(1, 0, 0)
+Vector3.Lerp([e:a], [e:b], [n:0.5])::Blends between two points.
+Vector3.MoveTowards([e:a], [e:b], [n:1])::Steps toward a point.
+[e:v].normalized::Same direction with length 1.
+[e:v].magnitude::Length of a vector.
+Quaternion.identity::No rotation.
+Quaternion.Euler([n:0], [n:0], [n:0])::Rotation from degrees.
+Quaternion.LookRotation([e:direction])::Rotation that faces a direction.
+Quaternion.Slerp([e:a], [e:b], [n:0.5])::Blends between rotations.
+new Color([n:1], [n:1], [n:1], [n:1])::A color from red, green, blue, alpha (0 to 1).
+Color.red::Red.
+Color.green::Green.
+Color.blue::Blue.
+Color.white::White.
+Color.black::Black.`);
+
+const I=cat('Input','#ffab4c');
+I.L(`?Input.GetKey([e:KeyCode.Space])::True while the key is held.
+?Input.GetKeyDown([e:KeyCode.Space])::True on the frame the key is pressed.
+?Input.GetKeyUp([e:KeyCode.Space])::True on the frame the key is released.
+Input.GetAxis([s:Horizontal])::Smoothed axis value from -1 to 1.
+Input.GetAxisRaw([s:Horizontal])::Unsmoothed axis value.
+?Input.GetButton([s:Jump])::True while a named button is held.
+?Input.GetButtonDown([s:Jump])::True on the frame a named button is pressed.
+?Input.GetMouseButton([n:0])::True while a mouse button is held.
+?Input.GetMouseButtonDown([n:0])::True on the frame a mouse button is pressed.
+?Input.GetMouseButtonUp([n:0])::True on the frame a mouse button is released.
+Input.mousePosition::Mouse position in pixels.
+Input.touchCount::Number of touches.
+?Input.anyKeyDown::True on the frame any key is pressed.
+InputDevices.GetDeviceAtXRNode([e:XRNode.RightHand])::Gets an XR controller or headset.
+?[e:device].TryGetFeatureValue(CommonUsages.triggerButton, out [i:pressed])::Reads an XR trigger button.`);
+
+const P=cat('Physics','#3d8bd9');
+P.L(`![e:rb].AddForce([e:Vector3.up * 5])::Pushes a Rigidbody.
+![e:rb].AddForce([e:Vector3.up * 5], ForceMode.Impulse)::Pushes a Rigidbody instantly.
+![e:rb].AddTorque([e:Vector3.up])::Spins a Rigidbody.
+![e:rb].MovePosition([e:position])::Moves a Rigidbody through physics.
+![e:rb].MoveRotation([e:rotation])::Rotates a Rigidbody through physics.
+[e:rb].velocity::Speed and direction of a Rigidbody.
+[e:rb].angularVelocity::Spin of a Rigidbody.
+[e:rb].mass::Mass of a Rigidbody.
+?Physics.Raycast([e:origin], [e:direction], out [i:hit], [n:100])::Shoots a ray and tells if it hit something.
+?Physics.SphereCast([e:origin], [n:0.5], [e:direction], out [i:hit])::Sweeps a sphere and tells if it hit something.
+Physics.OverlapSphere([e:center], [n:1])::Colliders inside a sphere.
+?Physics.CheckSphere([e:center], [n:1])::True if any collider is inside a sphere.
+Physics.gravity::Gravity vector.
+Physics2D.Raycast([e:origin], [e:direction])::2D raycast.
+![e:controller].Move([e:move * Time.deltaTime])::Moves a CharacterController.
+[e:hit].collider::The collider that was hit.
+[e:hit].point::The point where the ray hit.
+[e:hit].normal::The surface direction at the hit.
+[e:collision].gameObject::The object that was collided with.
+[e:other].gameObject::The object that entered a trigger.`);
+
+const Y=cat('My Code','#ff6680');
+Y.A([
+['s','code [e:Debug.Log("hi");]','$1','Any C# statement, written exactly as you type it.'],
+['c','code block [e:if (x > 0)]','$1','Any C# header that wraps blocks in braces.'],
+['r','expression [e:x + 1]','$1','Any C# value.'],
+['p','condition [e:x > 0]','$1','Any C# true or false expression.'],
+['m','member code [e:public int score;]','$1','Any C# line inside the class.'],
+['h','member block [e:void MyMethod()]','$1','Any C# member with a body in braces.']]);
+
+const BASES={MonoBehaviour:['class N : MonoBehaviour'],ScriptableObject:['class N : ScriptableObject'],'NetworkBehaviour (Netcode)':['class N : NetworkBehaviour','Unity.Netcode'],'MonoBehaviourPunCallbacks (Photon)':['class N : MonoBehaviourPunCallbacks','Photon.Pun'],'MonoBehaviourPun (Photon)':['class N : MonoBehaviourPun','Photon.Pun'],StateMachineBehaviour:['class N : StateMachineBehaviour'],Editor:['class N : Editor','UnityEditor'],EditorWindow:['class N : EditorWindow','UnityEditor'],'XRGrabInteractable':['class N : XRGrabInteractable','UnityEngine.XR.Interaction.Toolkit'],'Plain class':['class N'],'Static class':['static class N'],Struct:['struct N']};
+Object.keys(BASES).forEach(k=>{el('option','',$('#bs')).textContent=k});
+const AUTO=[[/SceneManager/,'UnityEngine.SceneManagement'],[/\bTMP_|TextMeshPro/,'TMPro'],[/NavMeshAgent/,'UnityEngine.AI'],[/\.(ToList|Where|Select|Any|First|OrderBy|Sum)\(/,'System.Linq'],[/\bTask\b/,'System.Threading.Tasks'],[/InputDevices|XRNode|CommonUsages/,'UnityEngine.XR'],[/UnityEvent/,'UnityEngine.Events'],[/\b(Action|Func|Exception|Convert|Math|Array|DateTime|Serializable|TimeSpan)\b/,'System'],[/IEnumerator\b/,'System.Collections'],[/\b(List|Dictionary|Queue|Stack|HashSet|IEnumerable)</,'System.Collections.Generic']];
+
+const q=s=>'"'+String(s).replace(/\\/g,'\\\\').replace(/"/g,'\\"')+'"';
+const val=(v,t)=>v&&typeof v=='object'?fill(D[v.d],v):t=='s'?q(v):v;
+const fill=(d,b)=>d.code.replace(/\$(\d)/g,(m,n)=>val(b.v[n-1],d.tok[n-1].k));
+const ind=n=>'    '.repeat(n),isM=b=>MK.includes(D[b.d].k);
+const gC=(a,l)=>a.map(b=>gB(b,l)).join('');
+function gB(b,l){const d=D[b.d],t=fill(d,b).replace(/ = ;/,';');
+ if(d.k!='c'&&d.k!='h')return ind(l)+t+'\n';
+ return t.split('@@').map((h,i)=>ind(l)+h+'\n'+ind(l)+'{\n'+gC(b.b[i]||[],l+1)+ind(l)+'}\n').join('')}
+const dv=(d,i)=>{const t=d.tok[i];return t.k=='d'?t.d.split(',')[0]:t.d};
+const mkB=id=>{const d=D[id];return{d:id,v:d.tok.map((t,i)=>dv(d,i)),b:d.k=='c'||d.k=='h'?d.code.split('@@').map(()=>[]):[]}};
+const clean=a=>a.filter(b=>D[b.d]).map(b=>(b.b=b.b.map(clean),b));
+
+let ws=[];
+const cv=$('#cv'),nm=$('#nm'),bs=$('#bs'),nsE=$('#ns'),code=$('#code');
+const sname=()=>nm.value.replace(/\W/g,'')||'NewScript';
+function build(){const n=sname(),bi=BASES[bs.value],ns=nsE.value.trim(),L=ns?1:0,us=new Set(['UnityEngine']);
+ if(bi[1])us.add(bi[1]);let at='',mem='';
+ ws.slice().sort((a,b)=>a.y-b.y||a.x-b.x).forEach(t=>t.s.forEach(b=>{const d=D[b.d];
+  if(d.k=='u')us.add(fill(d,b).replace(/^using |;$/g,'').trim());
+  else if(d.k=='a')at+=ind(L)+fill(d,b)+'\n';
+  else if(d.k=='m'||d.k=='h')mem+=gB(b,L+1)+(d.k=='h'?'\n':'')}));
+ mem=mem.replace(/\n+$/,'\n');
+ const body=at+ind(L)+'public '+bi[0].replace(/\bN\b/,n)+'\n'+ind(L)+'{\n'+mem+ind(L)+'}\n';
+ AUTO.forEach(([r,u])=>{if(r.test(body))us.add(u)});
+ const u=[...us].sort((a,b)=>(b.startsWith('System')-a.startsWith('System'))||a.localeCompare(b));
+ return u.map(x=>'using '+x+';').join('\n')+'\n\n'+(ns?'namespace '+ns+'\n{\n'+body+'}\n':body)}
+function gen(){try{localStorage.setItem('csb',JSON.stringify({ws,n:nm.value,b:bs.value,ns:nsE.value}))}catch(e){}
+ code.textContent=build();$('#fn').textContent=sname()+'.cs'}
+
+function rBlock(b){const d=D[b.d],e=el('div','b k'+d.k);e.style.setProperty('--c',d.c.col);e._b=b;
+ const row=el('div','row',e);
+ d.parts.forEach((p,i)=>{if(p)row.append(p);if(i<d.tok.length)row.append(rSlot(b,i))});
+ if(d.k=='c'||d.k=='h'){const hs=fill(d,b).split('@@');
+  b.b.forEach((a,i)=>{if(i)el('div','row sub',e).textContent=hs[i];el('div','cb',e).append(rStack(a,false))});
+  el('div','foot',e)}
+ return e}
+function rSlot(b,i){const t=D[b.d].tok[i],v=b.v[i],w=el('span','slot');w._s={b,i};
+ if(v&&typeof v=='object'){w.classList.add('has');w.append(rBlock(v));return w}
+ let x;
+ if(t.k=='b'||t.k=='d'){x=el('select');(t.k=='b'?['true','false']:t.d.split(',')).forEach(o=>{el('option','',x).textContent=o});x.value=v}
+ else{x=el('input');x.value=v;x.size=Math.max(2,v.length+1);x.spellcheck=false;x.placeholder=t.k=='n'?'0':'…';if(t.k=='t')x.setAttribute('list','types')}
+ x.oninput=x.onchange=()=>{b.v[i]=x.value;if(x.tagName=='INPUT')x.size=Math.max(2,x.value.length+1);gen()};
+ w.append(x);return w}
+function rStack(a,top){const s=el('div','stack');s._a=a;s._top=top;a.forEach(b=>s.append(rBlock(b)));return s}
+function render(){cv.innerHTML='';ws.forEach(t=>{const d=el('div','top',cv);d.style.left=t.x+'px';d.style.top=t.y+'px';d.append(rStack(t.s,true))});gen()}
+
+function pal(f){const p=$('#pal');p.innerHTML='';
+ CATS.forEach(c=>{const ids=c.ids.filter(id=>{const d=D[id];return!f||(d.label+' '+d.tip).toLowerCase().includes(f)});if(!ids.length)return;
+  const h=el('h4','',p);h.textContent=c.n;h.id='c_'+c.n.replace(/\W/g,'');h.style.color=c.col;
+  ids.forEach(id=>el('div','pw',p).append(rBlock(mkB(id))))})}
+CATS.forEach(c=>{const b=el('button','',$('#rail'));const i=el('i','',b);i.style.background=c.col;b.append(c.n);
+ b.onclick=()=>{$('#q').value='';pal('');$('#c_'+c.n.replace(/\W/g,'')).scrollIntoView()}});
+$('#q').oninput=e=>pal(e.target.value.trim().toLowerCase());
+
+let dr=null;const ind$=$('#ind'),tp=$('#tip');let tt;
+document.addEventListener('pointerdown',e=>{
+ if(e.button||e.target.closest('input,select,button'))return;
+ const be=e.target.closest('.b');if(!be)return;e.preventDefault();hideTip();
+ const r=be.getBoundingClientRect(),b=be._b;let items;
+ if(be.closest('#pal'))items=[JSON.parse(JSON.stringify(b))];
+ else if(be.parentElement._s){const{b:o,i}=be.parentElement._s;o.v[i]=dv(D[o.d],i);items=[b]}
+ else{const a=be.parentElement._a;items=a.splice(a.indexOf(b));ws=ws.filter(t=>t.s.length)}
+ render();
+ const f=el('div','float',document.body);f.append(rStack(items,false));
+ dr={items,f,ox:e.clientX-r.left,oy:e.clientY-r.top,t:null};
+ f.style.left=r.left+'px';f.style.top=r.top+'px'});
+function target(e,x,y){const k=D[dr.items[0].d].k;let best=null,bd=1e9;
+ if(k=='r'||k=='p'){document.querySelectorAll('#cv .slot').forEach(s=>{const r=s.getBoundingClientRect();
+  if(e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom&&r.width*r.height<bd){bd=r.width*r.height;best={slot:s._s,r}}});return best}
+ const m=MK.includes(k);
+ document.querySelectorAll('#cv .stack').forEach(s=>{const a=s._a;
+  if(s._top?(a[0]&&isM(a[0])!=m):m)return;
+  const kids=[...s.children],sr=s.getBoundingClientRect();
+  for(let i=0;i<=kids.length;i++){const py=i<kids.length?kids[i].getBoundingClientRect().top:kids.length?kids[i-1].getBoundingClientRect().bottom:sr.top;
+   const d=Math.hypot(sr.left-x,py-y);if(d<bd&&d<45){bd=d;best={a,i,px:sr.left,py,w:sr.width}}}});
+ return best}
+function showInd(t){if(!t){ind$.hidden=true;return}ind$.hidden=false;
+ if(t.slot){const r=t.r;Object.assign(ind$.style,{left:r.left-3+'px',top:r.top-3+'px',width:r.width+6+'px',height:r.height+6+'px'});ind$.className='box'}
+ else{Object.assign(ind$.style,{left:t.px+'px',top:t.py-2+'px',width:Math.max(t.w,70)+'px',height:'4px'});ind$.className='line'}}
+document.addEventListener('pointermove',e=>{if(!dr)return;const x=e.clientX-dr.ox,y=e.clientY-dr.oy;
+ dr.f.style.left=x+'px';dr.f.style.top=y+'px';dr.t=target(e,x,y);showInd(dr.t)});
+document.addEventListener('pointerup',e=>{if(!dr)return;const{t,items,f,ox,oy}=dr;dr=null;f.remove();ind$.hidden=true;
+ const w=$('#ws').getBoundingClientRect(),inside=e.clientX>w.left&&e.clientX<w.right&&e.clientY>w.top&&e.clientY<w.bottom;
+ if(inside){if(t&&t.slot)t.slot.b.v[t.slot.i]=items[0];
+  else if(t)t.a.splice(t.i,0,...items);
+  else{const c=cv.getBoundingClientRect();ws.push({x:Math.max(0,e.clientX-ox-c.left),y:Math.max(0,e.clientY-oy-c.top),s:items})}}
+ render()});
+cv.addEventListener('contextmenu',e=>{const be=e.target.closest('.b');if(!be)return;e.preventDefault();
+ const b=be._b,p=be.parentElement;
+ if(p._s){const{b:o,i}=p._s;o.v[i]=dv(D[o.d],i)}else{p._a.splice(p._a.indexOf(b),1);ws=ws.filter(t=>t.s.length)}render()});
+
+function hideTip(){clearTimeout(tt);tp.hidden=true}
+document.addEventListener('mouseover',e=>{hideTip();if(dr)return;const be=e.target.closest('.b');if(!be)return;
+ tt=setTimeout(()=>{const d=D[be._b.d];tp.textContent=d.tip;tp.hidden=false;const r=be.getBoundingClientRect(),w=tp.offsetWidth;
+  tp.style.left=(r.right+10+w>innerWidth?Math.max(8,r.left-w-10):r.right+10)+'px';tp.style.top=Math.max(8,r.top)+'px'},350)});
+document.addEventListener('mouseout',e=>{if(!e.relatedTarget)hideTip()});
+
+$('#clr').onclick=()=>{if(confirm('Remove every block from this script?')){ws=[];render()}};
+$('#cp').onclick=async()=>{try{await navigator.clipboard.writeText(code.textContent)}catch(e){const r=document.createRange();r.selectNodeContents(code);getSelection().removeAllRanges();getSelection().addRange(r);document.execCommand('copy')}
+ $('#cp').textContent='Copied';setTimeout(()=>$('#cp').textContent='Copy',1200)};
+$('#dl').onclick=()=>{const a=el('a');a.href=URL.createObjectURL(new Blob([code.textContent],{type:'text/plain'}));a.download=sname()+'.cs';a.click();URL.revokeObjectURL(a.href)};
+[nm,bs,nsE].forEach(x=>x.oninput=x.onchange=gen);
+
+try{const s=JSON.parse(localStorage.getItem('csb'));if(s&&s.ws){ws=s.ws.map(t=>(t.s=clean(t.s),t)).filter(t=>t.s.length);nm.value=s.n||'NewScript';if(BASES[s.b])bs.value=s.b;nsE.value=s.ns||''}else throw 0}
+catch(e){const st=mkB('hStart()'),lg=mkB('sDebug.Log([s:Hello])');lg.v[0]='Hello from C# Bricks!';st.b[0].push(lg);ws=[{x:50,y:40,s:[st]}]}
+pal('');render();
+</script>
+</body></html>
