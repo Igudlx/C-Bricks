@@ -461,7 +461,7 @@ let H=[],hi=-1,typ=0,dirty=0,cur=null,LIB={},ready=0;
 const state=()=>JSON.stringify({ws,n:nm.value,b:bs.value,ns:nsE.value});
 function commit(t){const s=state();if(H[hi]===s)return;if(t&&typ&&hi==H.length-1)H[hi]=s;else{H=H.slice(0,hi+1);H.push(s);hi=H.length-1;if(H.length>300){H.shift();hi--}}typ=t?1:0}
 function ui(){$('#sv').textContent=dirty?'Save *':'Saved'}
-function save(){if(!cur)cur='s'+Date.now().toString(36);LIB[cur]={id:cur,name:sname(),t:Date.now(),data:JSON.parse(state())};try{localStorage.setItem('csb_lib',JSON.stringify(LIB));localStorage.setItem('csb_cur',cur);dirty=0}catch(e){}ui()}
+function save(){if(!cur)cur='s'+Date.now().toString(36);const o=LIB[cur],k=o&&o.lbl&&o.ln==sname();LIB[cur]={id:cur,name:k?o.lbl:sname(),lbl:k?o.lbl:undefined,ln:k?o.ln:undefined,t:Date.now(),data:JSON.parse(state())};try{localStorage.setItem('csb_lib',JSON.stringify(LIB));localStorage.setItem('csb_cur',cur);dirty=0}catch(e){}ui()}
 const KW=new Set('abstract as base bool break byte case catch char checked class const continue decimal default delegate do double else enum event explicit extern false finally fixed float for foreach goto if implicit in int interface internal is lock long namespace new null object operator out override params private protected public readonly ref return sbyte sealed short sizeof stackalloc static string struct switch this throw true try typeof uint ulong unchecked unsafe ushort using virtual void volatile while'.split(' '));
 function walk(a,cx,E){a.forEach((b,i)=>{const d=D[b.d],t=fill(d,b).trim();
  d.tok.forEach((k,j)=>{const v=b.v[j];
@@ -591,8 +591,9 @@ document.addEventListener('keydown',e=>{const k=e.key.toLowerCase(),m=e.ctrlKey|
  else if(k=='delete'&&hov&&!dr&&!e.target.closest('input,select')){hov.dispatchEvent(new MouseEvent('contextmenu',{bubbles:true,cancelable:true}));hov=null}});
 const dis=()=>dirty&&!$('#au').checked&&!confirm('You have unsaved changes that will be lost. Continue?');
 function list(){const f=$('#sq').value.toLowerCase(),L=$('#sl');L.innerHTML='';
- Object.values(LIB).filter(x=>x.name.toLowerCase().includes(f)).sort((a,b)=>b.t-a.t).forEach(x=>{const r=el('div','si'+(x.id==cur?' on':''),L),i=el('div','',r);i.innerHTML='<b></b><small></small>';i.firstChild.textContent=x.name+'.cs';i.lastChild.textContent=x.data.b+' · '+new Date(x.t).toLocaleString();
+ Object.values(LIB).filter(x=>x.name.toLowerCase().includes(f)).sort((a,b)=>b.t-a.t).forEach(x=>{const r=el('div','si'+(x.id==cur?' on':''),L),i=el('div','',r);i.innerHTML='<b></b><small></small>';i.firstChild.textContent=x.lbl?x.name:x.name+'.cs';i.lastChild.textContent=x.data.b+' · '+new Date(x.t).toLocaleString();
   const o=el('button','',r);o.textContent='Open';o.onclick=()=>{if(dis())return;cur=x.id;load(x.data);try{localStorage.setItem('csb_cur',cur)}catch(e){}dlg.hidden=true};
+  const cp=el('button','',r);cp.textContent='Copy';cp.onclick=()=>{const id='s'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),nx=x.name+' (copy)';LIB[id]={id,name:nx,lbl:nx,ln:String(x.data.n||'').replace(/\W/g,'')||'NewScript',t:Date.now(),data:JSON.parse(JSON.stringify(x.data))};try{localStorage.setItem('csb_lib',JSON.stringify(LIB))}catch(e){}list()};
   const d=el('button','del',r);d.textContent='Delete';d.onclick=()=>{if(!confirm('Delete '+x.name+'.cs for good?'))return;delete LIB[x.id];try{localStorage.setItem('csb_lib',JSON.stringify(LIB))}catch(e){}if(cur==x.id)fresh();list()}});
  if(!L.children.length)L.textContent='No saved scripts yet.'}
 $('#op').onclick=()=>{$('#sq').value='';list();dlg.hidden=false;$('#sq').focus()};
